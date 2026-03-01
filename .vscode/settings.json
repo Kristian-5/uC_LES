@@ -5,7 +5,7 @@
   ],
   "idf.portWin": "COM4",
   "idf.currentSetup": "C:\\esp\\v5.5.2\\esp-idf",
-  "idf.projectDir": "c:\\ESP32_Workspace\\Labo_3_ADC",
+  "idf.projectDir": "c:\\ESP32_Workspace\\Microcontrollers_Projecten\\Labo_3_ADC",
   "idf.customExtraVars": {
     "IDF_TARGET": "esp32s3"
   },
@@ -13,7 +13,7 @@
   "clangd.arguments": [
     "--background-index",
     "--query-driver=**",
-    "--compile-commands-dir=c:\\ESP32_Workspace\\Labo_3_ADC\\build"
+    "--compile-commands-dir=c:\\ESP32_Workspace\\Microcontrollers_Projecten\\Labo_3_ADC\\build"
   ],
   "idf.flashType": "UART"
 }
