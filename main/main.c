@@ -4,54 +4,43 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
-#define LED1 38 // GROEN
-#define LED2 37 // ROOD
-#define LED3 36 // BLAUW
+#define LED_GROEN 38
+#define LED_ROOD  37
+#define LED_BLAUW 36
 
 #define CHANNEL ADC_CHANNEL_4
-#define TEMP_OFFSET_C -1.0f // Kalibratie: pas aan op basis van referentiethermometer //verwijderen misschien
 
 static void leds_init(void)
 {
     gpio_config_t io_conf = {
-        .pin_bit_mask = (1ULL << LED1) | (1ULL << LED2) | (1ULL << LED3),
+        .pin_bit_mask = (1ULL << LED_GROEN) | (1ULL << LED_ROOD) | (1ULL << LED_BLAUW),
         .mode = GPIO_MODE_OUTPUT,
-        .pull_up_en = GPIO_PULLUP_DISABLE,
-        .pull_down_en = GPIO_PULLDOWN_DISABLE,
-        .intr_type = GPIO_INTR_DISABLE,
     };
-
     gpio_config(&io_conf);
-    gpio_set_level(LED1, 0);
-    gpio_set_level(LED2, 0);
-    gpio_set_level(LED3, 0);
+
+    gpio_set_level(LED_GROEN, 0);
+    gpio_set_level(LED_ROOD, 0);
+    gpio_set_level(LED_BLAUW, 0);
 }
 
-static void zet_kleur(float temperatuur_c)
+static void zet_kleur(float temp)
 {
-    if (temperatuur_c > 19.0f)
-    {
-        // Boven 19°C -> ROOD (LED2)
-        gpio_set_level(LED1, 0);
-        gpio_set_level(LED2, 1);
-        gpio_set_level(LED3, 0);
+    if (temp > 19.0f) {
+        gpio_set_level(LED_ROOD, 1);
+        gpio_set_level(LED_GROEN, 0);
+        gpio_set_level(LED_BLAUW, 0);
     }
-    else if (temperatuur_c >= 18.0f)
-    {
-        // Tussen 18°C en 19°C -> GROEN (LED1)
-        gpio_set_level(LED1, 1);
-        gpio_set_level(LED2, 0);
-        gpio_set_level(LED3, 0);
+    else if (temp >= 18.0f) {
+        gpio_set_level(LED_ROOD, 0);
+        gpio_set_level(LED_GROEN, 1);
+        gpio_set_level(LED_BLAUW, 0);
     }
-    else
-    {
-        // Onder 18°C -> BLAUW (LED3)
-        gpio_set_level(LED1, 0);
-        gpio_set_level(LED2, 0);
-        gpio_set_level(LED3, 1);
+    else {
+        gpio_set_level(LED_ROOD, 0);
+        gpio_set_level(LED_GROEN, 0);
+        gpio_set_level(LED_BLAUW, 1);
     }
 }
-
 
 void app_main(void)
 {
@@ -60,37 +49,15 @@ void app_main(void)
 
     while (1)
     {
-        int spanning_mv = myADC_getMiliVolt(CHANNEL);
+        int mv = myADC_getMiliVolt(CHANNEL);
 
-        if (spanning_mv < 0 || spanning_mv > 1100)
-        {
-            gpio_set_level(LED1, 0);
-            gpio_set_level(LED2, 0);
-            gpio_set_level(LED3, 1);
-            printf("Sensorfout: %d mV (check LM35 bedrading: V+, OUT, GND)\n", spanning_mv);
-            vTaskDelay(pdMS_TO_TICKS(1000));
-            continue;
-        }
+        // LM35 geeft 10 mV per °C → 250 mV = 25°C
+        float temp = mv / 10.0f;
 
-        if (spanning_mv > 500)
-        {
-            gpio_set_level(LED1, 0);
-            gpio_set_level(LED2, 0);
-            gpio_set_level(LED3, 1);
-            printf("Onrealistische LM35-waarde: %d mV (controleer ADC-kanaal en OUT-pin)\n", spanning_mv);
-            vTaskDelay(pdMS_TO_TICKS(1000));
-            continue;
-        }
+        zet_kleur(temp);
 
-        float temperatuur_raw_c = spanning_mv / 10.0f;
-        float temperatuur_c = temperatuur_raw_c + TEMP_OFFSET_C;//verwijderen misschien
-
-        zet_kleur(temperatuur_c);
-
-        printf("Spanning: %d mV | Temp raw: %.1f C | Temp gecorrigeerd: %.1f C\n", spanning_mv, temperatuur_raw_c, temperatuur_c);
+        printf("Spanning: %d mV | Temp: %.1f °C\n", mv, temp);
 
         vTaskDelay(pdMS_TO_TICKS(1000));
-
     }
-
 }
