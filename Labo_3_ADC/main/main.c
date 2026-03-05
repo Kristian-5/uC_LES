@@ -50,8 +50,6 @@ void app_main(void)
     while (1)
     {
         int mv = myADC_getMiliVolt(CHANNEL);
-
-        // LM35 geeft 10 mV per °C → 250 mV = 25°C
         float temp = mv / 10.0f;
 
         zet_kleur(temp);
