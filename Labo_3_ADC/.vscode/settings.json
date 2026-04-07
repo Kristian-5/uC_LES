@@ -4,7 +4,7 @@
     "board/esp32s3-builtin.cfg"
   ],
   "idf.portWin": "COM4",
-  "idf.currentSetup": "C:\\esp\\v5.5.2\\esp-idf",
+  "idf.currentSetup": "C:\\esp\\v5.3.5\\esp-idf",
   "idf.projectDir": "c:\\ESP32_Workspace\\Microcontrollers_Projecten\\Labo_3_ADC",
   "idf.customExtraVars": {
     "IDF_TARGET": "esp32s3"
