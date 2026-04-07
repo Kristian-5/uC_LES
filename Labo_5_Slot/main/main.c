@@ -124,4 +124,3 @@ void app_main(void)
         vTaskDelay(50 / portTICK_PERIOD_MS);
     }
 }
-/*.*/
