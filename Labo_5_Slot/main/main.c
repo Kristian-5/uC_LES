@@ -8,21 +8,22 @@
 #define LED_LOCK 18
 #define BTN_LOCK 4
 
-// GPIO 5 = ADC1_CHANNEL_4 op ESP32-S3
+#define LED_CORRECT 38
+
 #define CHANNEL ADC1_CHANNEL_4
 
 void app_main(void)
 {
-    // LED setup
     gpio_reset_pin(LED_LOCK);
     gpio_set_direction(LED_LOCK, GPIO_MODE_OUTPUT);
 
-    // Button setup
+    gpio_reset_pin(LED_CORRECT);
+    gpio_set_direction(LED_CORRECT, GPIO_MODE_OUTPUT);
+
     gpio_reset_pin(BTN_LOCK);
     gpio_set_direction(BTN_LOCK, GPIO_MODE_INPUT);
     gpio_set_pull_mode(BTN_LOCK, GPIO_PULLDOWN_ONLY);
 
-    // ADC setup
     static esp_adc_cal_characteristics_t *adc_chars;
     adc1_config_width(ADC_WIDTH_BIT_12);
     adc1_config_channel_atten(CHANNEL, ADC_ATTEN_DB_11);
@@ -33,8 +34,7 @@ void app_main(void)
         ADC_ATTEN_DB_11,
         ADC_WIDTH_BIT_12,
         1100,
-        adc_chars
-    );
+        adc_chars);
 
     int code[4] = {0, 0, 0, 0};
     int guess[4] = {0, 0, 0, 0};
@@ -47,20 +47,18 @@ void app_main(void)
 
     while (1)
     {
-        // Lees ADC
         int potmV = esp_adc_cal_raw_to_voltage(adc1_get_raw(CHANNEL), adc_chars);
-        int getal = potmV / 330;   // 0–9
-        if (getal > 9) getal = 9;
+        int getal = potmV / 330; // 0–9
+        if (getal > 9)
+            getal = 9;
 
         printf("ADC getal: %d\n", getal);
 
-        // LED status afhankelijk van slot
         if (slotOpen)
-            gpio_set_level(LED_LOCK, 0); // open
+            gpio_set_level(LED_LOCK, 0); 
         else
-            gpio_set_level(LED_LOCK, 1); // dicht
+            gpio_set_level(LED_LOCK, 1);
 
-        // --- CODE INSTELLEN ---
         if (!codeIsSet)
         {
             if (gpio_get_level(BTN_LOCK) == 1)
@@ -78,8 +76,6 @@ void app_main(void)
                 }
             }
         }
-
-        // --- CODE RADEN ---
         else
         {
             if (gpio_get_level(BTN_LOCK) == 1)
@@ -92,18 +88,19 @@ void app_main(void)
 
                 if (guessIndex == 4)
                 {
-                    // Check code
                     if (code[0] == guess[0] &&
                         code[1] == guess[1] &&
                         code[2] == guess[2] &&
                         code[3] == guess[3])
                     {
                         printf("CORRECTE CODE!\n");
-                        slotOpen = true;   // LED blijft uit
+                        slotOpen = true; // LED blijft uit
+                        gpio_set_level(LED_CORRECT, 1);
                     }
                     else
                     {
                         printf("FOUTE CODE!\n");
+                        gpio_set_level(LED_CORRECT, 0);
 
                         // LED knipperen (slot blijft dicht)
                         for (int i = 0; i < 5; i++)
@@ -114,8 +111,6 @@ void app_main(void)
                             vTaskDelay(200 / portTICK_PERIOD_MS);
                         }
                     }
-
-                    // Reset guess
                     guessIndex = 0;
                 }
             }
